@@ -10,7 +10,7 @@ public:
 
 	void markDeliveryError(NotificationContext&) override;
 
-	void retry(NotificationContext& notification) override;
+	void retry(NotificationContext& context) override;
 
 	std::string getName() const override;
 };

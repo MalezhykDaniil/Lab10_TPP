@@ -6,9 +6,9 @@ class SentState : public INotificationState
 public:
 	void send(NotificationContext&) override;
 
-	void markDelivered(NotificationContext& notification) override;
+	void markDelivered(NotificationContext& context) override;
 
-	void markDeliveryError(NotificationContext& notification) override;
+	void markDeliveryError(NotificationContext& context) override;
 
 	void retry(NotificationContext&) override;
 

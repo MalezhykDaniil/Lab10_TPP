@@ -1,9 +1,12 @@
 #include <stdexcept>
+#include <memory>
 #include "CreatedState.h"
+#include "NotificationContext.h"
+#include "SentState.h"
 
-void CreatedState::send(NotificationContext& notification)
+void CreatedState::send(NotificationContext& context)
 {
-
+	context.setState(std::make_unique<SentState>());
 }
 
 void CreatedState::markDelivered(NotificationContext&)

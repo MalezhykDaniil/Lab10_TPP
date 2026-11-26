@@ -9,4 +9,8 @@ struct Notification
     std::string message;
     std::string createdAt;
     int priority = 3;
+    std::string state = "Created";
+    int importance = 1;
+    int urgency = 1;
+    double waitingTime = 0.0;
 };

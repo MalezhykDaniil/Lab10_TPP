@@ -10,6 +10,17 @@
 #include "INotificationCategoryRepository.h"
 #include "SQLiteNotificationCategoryRepository.h"
 #include "TestData.h"
+#include "NotificationContext.h"
+#include "CreatedState.h"
+#include "NotificationStateRepository.h"
+#include "NotificationSubject.h"
+#include "NotificationLogger.h"
+#include "DeliveryStatistics.h"
+#include "PriorityCalculator.h"
+#include "MaximumPriorityStrategy.h"
+#include "MaximumPriorityFactory.h"
+#include "WeightedSumPriorityFactory.h"
+#include "NormalizedWeightedSumPriorityFactory.h"
 
 int insertNotificationCategory(
     sqlite3* db,
@@ -683,6 +694,87 @@ void runWithoutTransactionDemo()
         << storage.count<Notification>() << '\n';
 }
 
+//ДЕМО
+void runNotificationPatternsDemo()
+{
+    auto storage = createStorage("notification.db");
+
+    storage.on_open = [](sqlite3* db) {
+        if (sqlite3_exec(db, "PRAGMA foreign_keys = ON;",
+            nullptr, nullptr, nullptr) != SQLITE_OK)
+        {
+            throw std::runtime_error("Не вдалося увімкнути зовнішні ключі");
+        }
+        };
+
+    storage.sync_schema();
+
+    NotificationSubject subject;
+
+    auto logger = std::make_shared<NotificationLogger>();
+    auto statistics = std::make_shared<DeliveryStatistics>();
+
+    subject.subscribe(logger);
+    subject.subscribe(statistics);
+
+    NotificationCategory category{
+    0,
+    "Безпека",
+    "Сповіщення про безпеку",
+    "email",
+    1
+    };
+
+    int categoryId = storage.insert(category);
+
+    Notification notification{
+        0,
+        categoryId,
+        "Новий вхід",
+        "Виявлено вхід із нового пристрою",
+        "2026-11-26 13:00",
+        1
+    };
+
+    int notificationId = storage.insert(notification);
+    notification.id = notificationId;
+
+    subject.notify({ notification.id, "Created" });
+
+    NotificationStateRepository stateRepository(storage);
+
+    NotificationContext context(
+        std::make_unique<CreatedState>(),
+        notification,
+        stateRepository,
+        &subject
+    );
+
+    std::cout << "\nПочатковий стан: ";
+    context.showState();
+
+    context.send();
+
+    std::cout << "Після відправлення: ";
+    context.showState();
+
+    context.markDelivered();
+
+    std::cout << "Після доставки: ";
+    context.showState();
+
+    MaximumPriorityFactory factory;
+    PriorityCalculator calculator(factory.createStrategy());
+
+    double priority = calculator.calculate(notification);
+
+    std::cout << "\nРозрахований пріоритет: "
+        << priority << '\n';
+
+    std::cout << "Кількість успішних доставок: "
+        << statistics->getDeliveredCount() << '\n';
+}
+
 int main()
 {
     try {
@@ -695,6 +787,7 @@ int main()
         runTransactionDemo();
 		runRollbackDemo();
 		runWithoutTransactionDemo();
+        runNotificationPatternsDemo();
 
     } catch (const std::exception& ex) {
         std::cerr << "Помилка застосунку: " << ex.what() << '\n';

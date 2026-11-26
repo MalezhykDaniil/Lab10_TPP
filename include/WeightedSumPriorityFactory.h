@@ -1,0 +1,11 @@
+#pragma once
+
+#include <memory>
+#include "IPriorityStrategy.h"
+#include "IPriorityStrategyFactory.h"
+
+class WeightedSumPriorityFactory : public IPriorityStrategyFactory
+{
+public:
+	std::unique_ptr<IPriorityStrategy> createStrategy() override;
+};

@@ -4,7 +4,7 @@
 class CreatedState : public INotificationState
 {
 public:
-	void send(NotificationContext& notification) override;
+	void send(NotificationContext& context) override;
 
 	void markDelivered(NotificationContext&) override;
 

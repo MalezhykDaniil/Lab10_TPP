@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include "DeliveredState.h"
 
-void DeliveredState::send(NotificationContext& notification)
+void DeliveredState::send(NotificationContext&)
 {
 	throw std::logic_error("Notification already delivered");
 }
